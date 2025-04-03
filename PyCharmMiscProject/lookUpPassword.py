@@ -1,7 +1,29 @@
 from codemachine import CodeMachine
 import json
 import re
-import random
+
+
+def read_psafe():
+    with open("C://Users/hparks/OneDrive - Werner Enterprises/Documents/psafe.fil") as infile:
+        contents = infile.read()
+    psafe = {}
+    while True:
+        try:
+            key = input("Enter the secret key: ")
+            cm = CodeMachine(key)
+            js = cm.cypher(contents)
+            psafe = json.loads(js)
+            break
+        except json.decoder.JSONDecodeError:
+            continue
+    return psafe, cm
+
+def write_psafe(ps, cm):
+    js = json.dumps(ps)
+    output = cm.cypher(js)
+    with open('C://Users/hparks/OneDrive - Werner Enterprises/Documents/psafe.fil', 'w') as outfile:
+        outfile.write(output)
+
 
 def binary_search_regex(arr, regex):
     low = 0
@@ -25,54 +47,41 @@ def f(title):
     a = input(f"{title}: ")
     return title,a
 
+def titles():
+    import random
+    example = random.choice(keylist)
+    rando = psafe[example]
+    return list(rando.keys())
 
-with open("C://Users/hparks/OneDrive - Werner Enterprises/Documents/psafe.fil") as infile:
-    contents = infile.read()
-while True:
-    try:
-        key = input("Enter the secret key: ")
-        cm = CodeMachine(key)
-        js = cm.cypher(contents)
-        psafe = json.loads(js)
-        break
-    except json.decoder.JSONDecodeError:
-        continue
+(psafe, cm) = read_psafe()
 keylist = list(psafe.keys())
-example = random.choice(keylist)
-rando = psafe[example]
-titles = list(rando.keys())
-group = input("Enter the password name: ")
-if group == '':
-    answer = input("New or Fix entry? ")
-    if answer.lower() == 'new':
-        deets = {}
-        for t in titles:
-            deets[t] = input(f"{t}: ")
-        group = deets['Group/Title']
-        psafe[group] = deets
-        js = json.dumps(psafe)
-        output = cm.cypher(js)
-        with open('C://Users/hparks/OneDrive - Werner Enterprises/Documents/psafe.fil', 'w') as outfile:
-            outfile.write(output)
+group = input("Enter the password name (or END): ")
+while group != 'END':
+    if group == '':
+        answer = input("New or Fix entry? ")
+        if answer.lower() == 'new':
+            deets = {}
+            for t in titles():
+                deets[t] = input(f"{t}: ")
+            group = deets['Group/Title']
+            psafe[group] = deets
+            write_psafe(psafe, cm)
+        elif answer.lower() == 'fix':
+            oldval = input("Enter old value: ")
+            newval = input("Enter new value: ")
+            psafe[newval] = psafe[oldval]
+            psafe.pop(oldval)
+            group = newval
+            write_psafe(psafe, cm)
         keylist = list(psafe.keys())
-    elif answer.lower() == 'fix':
-        oldval = input("Enter old value: ")
-        newval = input("Enter new value: ")
-        psafe[newval] = psafe[oldval]
-        psafe.pop(oldval)
-        group = newval
-        js = json.dumps(psafe)
-        output = cm.cypher(js)
-        with open('C://Users/hparks/OneDrive - Werner Enterprises/Documents/psafe.fil', 'w') as outfile:
-            outfile.write(output)
-        keylist = list(psafe.keys())
-while group != '':
-    try:
-        record = psafe[group]
-        print(f"Key:{group}\tUser:{record['Username']}\tPwd:{record['Password']}\tURL:{record['URL']}")
-    except KeyError:
-        print(f"Did not find key {group}")
-        ind = binary_search_regex(keylist, group[0:2])
-        if ind >= 0:
-            print(f"Did you maybe mean {keylist[ind:ind+5]}?")
-    group = input("Enter the password name: ")
+    else:
+        try:
+            record = psafe[group]
+            print(f"Key:{group}\tUser:{record['Username']}\tPwd:{record['Password']}\tURL:{record['URL']}")
+        except KeyError:
+            print(f"Did not find key {group}")
+            ind = binary_search_regex(keylist, group[0:2])
+            if ind >= 0:
+                ind = max(0,ind-3,ind-2,ind-1)
+                print(f"Did you maybe mean {keylist[ind:ind+5]}?")
+    group = input("Enter the password name (or END): ")
