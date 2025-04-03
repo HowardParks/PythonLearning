@@ -24,6 +24,14 @@ def write_psafe(ps, cm):
     with open('C://Users/hparks/OneDrive - Werner Enterprises/Documents/psafe.fil', 'w') as outfile:
         outfile.write(output)
 
+def regex_search(arr, regex):
+    possibles = []
+    for k in arr:
+        if re.search(regex, k, re.IGNORECASE):
+            possibles.append(k)
+    if len(possibles) > 0:
+        print(f"Did you maybe mean {possibles}?")
+
 
 def binary_search_regex(arr, regex):
     low = 0
@@ -55,6 +63,7 @@ def titles():
 
 (psafe, cm) = read_psafe()
 keylist = list(psafe.keys())
+keylist.sort()
 group = input("Enter the password name (or END): ")
 while group != 'END':
     if group == '':
@@ -79,9 +88,10 @@ while group != 'END':
             record = psafe[group]
             print(f"Key:{group}\tUser:{record['Username']}\tPwd:{record['Password']}\tURL:{record['URL']}")
         except KeyError:
-            print(f"Did not find key {group}")
-            ind = binary_search_regex(keylist, group[0:2])
-            if ind >= 0:
-                ind = max(0,ind-3,ind-2,ind-1)
-                print(f"Did you maybe mean {keylist[ind:ind+5]}?")
+            print(f"Did not find {group}")
+            # ind = binary_search_regex(keylist, group[0:2])
+            # if ind >= 0:
+            #     ind = max(0,ind-3,ind-2,ind-1)
+            #     print(f"Did you maybe mean {keylist[ind:ind+5]}?")
+            regex_search(keylist, group)
     group = input("Enter the password name (or END): ")
