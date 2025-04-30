@@ -1,7 +1,9 @@
 from codemachine import CodeMachine
 import json
 import re
-
+import keyboard
+from passphrase import PassPhrase
+#import getpass
 
 def read_psafe():
     with open("C://Users/hparks/OneDrive - Werner Enterprises/Documents/psafe.fil") as infile:
@@ -9,7 +11,8 @@ def read_psafe():
     psafe = {}
     while True:
         try:
-            key = input("Enter the secret key: ")
+            key=input("Enter secret key: ")
+#            key = getpass.getpass()
             cm = CodeMachine(key)
             js = cm.cypher(contents)
             psafe = json.loads(js)
@@ -61,37 +64,84 @@ def titles():
     rando = psafe[example]
     return list(rando.keys())
 
+def getnewpassword():
+    pp = PassPhrase()
+    while True:
+        newpassword = pp.passphrase()
+        resp = input(f"Password: {newpassword}  Okay? ").lower()
+        if resp[0] == 'y':
+            return newpassword
+
 (psafe, cm) = read_psafe()
 keylist = list(psafe.keys())
 keylist.sort()
-group = input("Enter the password name (or END): ")
-while group != 'END':
-    if group == '':
-        answer = input("New or Fix entry? ")
-        if answer.lower() == 'new':
-            deets = {}
-            for t in titles():
-                deets[t] = input(f"{t}: ")
-            group = deets['Group/Title']
-            psafe[group] = deets
-            write_psafe(psafe, cm)
-        elif answer.lower() == 'fix':
-            oldval = input("Enter old value: ")
-            newval = input("Enter new value: ")
-            psafe[newval] = psafe[oldval]
-            psafe.pop(oldval)
-            group = newval
-            write_psafe(psafe, cm)
-        keylist = list(psafe.keys())
-    else:
+option = input("[1] Lookup\n2 New\n3 Edit\n4 List\nEND Exit: ")
+while option != 'END':
+    if option == '' or option == '1': ### Lookup
         try:
+            group = input("Enter the password title: ")
             record = psafe[group]
             print(f"Key:{group}\tUser:{record['Username']}\tPwd:{record['Password']}\tURL:{record['URL']}")
         except KeyError:
             print(f"Did not find {group}")
-            # ind = binary_search_regex(keylist, group[0:2])
-            # if ind >= 0:
-            #     ind = max(0,ind-3,ind-2,ind-1)
-            #     print(f"Did you maybe mean {keylist[ind:ind+5]}?")
             regex_search(keylist, group)
-    group = input("Enter the password name (or END): ")
+            continue
+    elif option == '2': ### New
+        deets = {}
+        for t in titles():
+            deets[t] = input(f"{t}: ")
+            if t == "Password" and deets[t]=='':
+                deets[t] = getnewpassword()
+                print(f"Password for {deets['Group/Title']} is {deets['Password']}")
+        group = deets['Group/Title']
+        psafe[group] = deets
+        write_psafe(psafe, cm)
+    elif option == "3": ## Edit
+        group = input("Enter the password name: ")
+        changemade = False
+        for field, value in psafe[group].items():
+            if value != '' or resp[0] == 'y':
+                print(f"    {field}: {value} ", end='')
+                if field == 'Password':
+                    resp = input("Generate new password? ").lower()
+                    if resp != '' and resp[0] == 'y':
+                        newval = getnewpassword()
+                        print(f"    {newval}")
+                    else:
+                        newval = input("New value: ")
+                else:
+                        newval = input("New value: ")
+                if newval != '':
+                    psafe[group][field] = newval
+                    changemade = True
+        if changemade:
+            write_psafe(psafe, cm)
+    elif option == "4":
+        groups = list(psafe.keys())
+        groups.sort()
+        last = len(groups) - 1
+        counter = 0
+        group = groups[counter]
+        option = 'c'
+        while option != 'e':
+            group = groups[counter]
+            while group == '':
+                counter += 1
+                group = groups[counter]
+            print(f"GROUP:{group}")
+            for field, value in psafe[group].items():
+                if value != '':
+                    print(f"    {field}: {value}")
+            option = input("[c] cont, f fwd 5, b back 5, e end ... ")
+            if option == 'f':
+                counter += 5
+                if counter > last:
+                    counter = last
+            elif option == 'b':
+                counter -= 5
+                if counter < 0:
+                    counter = 0
+            else:
+                counter += 1
+            print()
+    option = input("[1] Lookup\n 2  New\n 3  Edit\n 4  List\nEND Exit: ")
