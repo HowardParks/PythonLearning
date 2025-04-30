@@ -85,7 +85,6 @@ while option != 'END':
         except KeyError:
             print(f"Did not find {group}")
             regex_search(keylist, group)
-            continue
     elif option == '2': ### New
         deets = {}
         for t in titles():
@@ -97,10 +96,16 @@ while option != 'END':
         psafe[group] = deets
         write_psafe(psafe, cm)
     elif option == "3": ## Edit
-        group = input("Enter the password name: ")
+        try:
+            group = input("Enter the password name: ")
+            pdict = psafe[group]
+        except KeyError:
+            print(f"Did not find {group}")
+            regex_search(keylist, group)
+            continue
         changemade = False
-        for field, value in psafe[group].items():
-            if value != '' or resp[0] == 'y':
+        for field, value in pdict.items():
+            if value != '':
                 print(f"    {field}: {value} ", end='')
                 if field == 'Password':
                     resp = input("Generate new password? ").lower()
@@ -110,7 +115,7 @@ while option != 'END':
                     else:
                         newval = input("New value: ")
                 else:
-                        newval = input("New value: ")
+                    newval = input("New value: ")
                 if newval != '':
                     psafe[group][field] = newval
                     changemade = True
@@ -132,7 +137,7 @@ while option != 'END':
             for field, value in psafe[group].items():
                 if value != '':
                     print(f"    {field}: {value}")
-            option = input("[c] cont, f fwd 5, b back 5, e end ... ")
+            option = input("[c] cont, f fwd 5, b back 5, e end ... ").lower()
             if option == 'f':
                 counter += 5
                 if counter > last:
