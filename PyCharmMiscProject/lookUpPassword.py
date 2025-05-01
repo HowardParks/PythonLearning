@@ -6,15 +6,16 @@ from passphrase import PassPhrase
 #import getpass
 
 def read_psafe():
-    with open("C://Users/hparks/OneDrive - Werner Enterprises/Documents/psafe.fil") as infile:
-        contents = infile.read()
+    with open("C://Users/hparks/OneDrive - Werner Enterprises/Documents/psafeb.fil","rb") as infile:
+        cba = infile.read()
+    crypted = cba.decode('utf-16')
     psafe = {}
     while True:
         try:
             key=input("Enter secret key: ")
 #            key = getpass.getpass()
             cm = CodeMachine(key)
-            js = cm.cypher(contents)
+            js = cm.cypher(crypted)
             psafe = json.loads(js)
             break
         except json.decoder.JSONDecodeError:
@@ -23,9 +24,10 @@ def read_psafe():
 
 def write_psafe(ps, cm):
     js = json.dumps(ps)
-    output = cm.cypher(js)
-    with open('C://Users/hparks/OneDrive - Werner Enterprises/Documents/psafe.fil', 'w') as outfile:
-        outfile.write(output)
+    crypted = cm.cypher(js)
+    oba = bytearray(crypted, 'utf-16')
+    with open('C://Users/hparks/OneDrive - Werner Enterprises/Documents/psafeb.fil', 'wb') as outfile:
+        outfile.write(oba)
 
 def regex_search(arr, regex):
     possibles = []
@@ -113,9 +115,9 @@ while option != 'END':
                         newval = getnewpassword()
                         print(f"    {newval}")
                     else:
-                        newval = input("New value: ")
+                        newval = input(f"New {field}: ")
                 else:
-                    newval = input("New value: ")
+                    newval = input(f"New {field}: ")
                 if newval != '':
                     psafe[group][field] = newval
                     changemade = True
