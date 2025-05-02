@@ -1,9 +1,7 @@
 from codemachine import CodeMachine
 import json
 import re
-import keyboard
 from passphrase import PassPhrase
-#import getpass
 
 def read_psafe():
     with open("C://Users/hparks/OneDrive - Werner Enterprises/Documents/psafeb.fil","rb") as infile:
@@ -43,7 +41,7 @@ def binary_search_regex(arr, regex):
     high = len(arr) - 1
     rx = regex.lower()
     rc = re.compile(f"^{rx}.*$")
-    arrl = list(map(str.lower, arr))
+    arrl = list(map(str.lower(), arr))
     arrl.sort()
     while low <= high:
         mid = (low + high) // 2
@@ -93,7 +91,6 @@ while option != 'END':
             deets[t] = input(f"{t}: ")
             if t == "Password" and deets[t]=='':
                 deets[t] = getnewpassword()
-                print(f"Password for {deets['Group/Title']} is {deets['Password']}")
         group = deets['Group/Title']
         psafe[group] = deets
         write_psafe(psafe, cm)
