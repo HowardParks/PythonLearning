@@ -19,6 +19,7 @@ while current_dir != 'END':
         current_dir = 'C://Users/hparks/GitHub/WernerEnterprise'
     elif current_dir == '210':
         current_dir = 'C://Users/hparks/GitHub/WernerEnterprise/Mastery/210'
+    print(f"Searching in {current_dir}")
     target = input("Search target: ")
     found_list = search_pathlib(current_dir, target)
     print(found_list)

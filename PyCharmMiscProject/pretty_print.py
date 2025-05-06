@@ -162,12 +162,12 @@ for file in files:
                         words[i+4],d2 = dateconvert(words[i+4])
                         u2n = n - d1
                         c2n = n - d2
-                        c2ns = str(c2n.days) + " days old"
+                        c2ns = str(c2n.days).rjust(3) + " days old"
                         if words[i+3][0:11] == 'Incident - ':
                             words[i+3] = words[i+3][11:]
                     else:
-                        c2ns = ''
-                    output += f"{words[i]:8} {words[i+1]:17} {words[i+3][0:40]:40} {words[i+4]:17} {c2ns}\n"
+                        c2ns = 'Age'
+                    output += f"{words[i]:8} {words[i+1]:17} {words[i+3][0:40]:40} {words[i+4]:17} {c2ns:12} {words[i+6]:12}\n"
     else:
         continue
     print(write_file(filename, output))
