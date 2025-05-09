@@ -1,6 +1,10 @@
 from tkinter import *
 from tkinter import messagebox
 from random import choice, randint, shuffle
+import sys
+sys.path.append('C:/Users/hparks/OneDrive - Werner Enterprises/Python/PyCharmMiscProject')
+from passphrase import PassPhrase
+
 #import pyperclip
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
@@ -18,7 +22,12 @@ def generate_password():
     password_list = password_letters + password_symbols + password_numbers
     shuffle(password_list)
 
-    password = "".join(password_list)
+    password = password_entry.get()
+    if password != '':
+        password_entry.delete(0,21)
+    pp = PassPhrase()
+    password = pp.passphrase()
+#    password = "".join(password_list)
     password_entry.insert(0, password)
  #   pyperclip.copy(password)
 

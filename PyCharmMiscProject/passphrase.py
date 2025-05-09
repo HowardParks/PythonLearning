@@ -7,7 +7,7 @@ class PassPhrase:
         strings.pop()
         self.words = []
         for word in strings:
-            if len(word) > 3 and len(word) < 10 and word.isalnum():
+            if 3 < len(word) < 10 and word.isalnum():
                 self.words.append(word)
         self.table = {'e':'3','i':'1','s':'5','o':'0'}
 

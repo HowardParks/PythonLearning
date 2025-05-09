@@ -20,6 +20,7 @@ def read_psafe():
             continue
     return psafe, cm
 
+
 def write_psafe(ps, cm):
     js = json.dumps(ps)
     crypted = cm.cypher(js)
@@ -103,6 +104,7 @@ while option != 'END':
             regex_search(keylist, group)
             continue
         changemade = False
+        groupchange = False
         for field, value in pdict.items():
             if value != '':
                 print(f"    {field}: {value} ", end='')
@@ -113,6 +115,10 @@ while option != 'END':
                         print(f"    {newval}")
                     else:
                         newval = input(f"New {field}: ")
+                elif field == 'Group/Title':
+                    newval = input(f"New {field}: ")
+                    if newval != '':
+                        groupchange = True
                 else:
                     newval = input(f"New {field}: ")
                 if newval != '':
