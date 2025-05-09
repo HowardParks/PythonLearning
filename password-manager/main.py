@@ -1,6 +1,5 @@
 from tkinter import *
 from tkinter import messagebox
-from random import choice, randint, shuffle
 import sys
 sys.path.append('C:/Users/hparks/OneDrive - Werner Enterprises/Python/PyCharmMiscProject')
 from passphrase import PassPhrase
@@ -11,25 +10,9 @@ from passphrase import PassPhrase
 
 #Password Generator Project
 def generate_password():
-    letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-    numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-    symbols = ['!', '#', '$', '%', '&', '(', ')', '*', '+']
-
-    password_letters = [choice(letters) for _ in range(randint(8, 10))]
-    password_symbols = [choice(symbols) for _ in range(randint(2, 4))]
-    password_numbers = [choice(numbers) for _ in range(randint(2, 4))]
-
-    password_list = password_letters + password_symbols + password_numbers
-    shuffle(password_list)
-
-    password = password_entry.get()
-    if password != '':
-        password_entry.delete(0,21)
     pp = PassPhrase()
     password = pp.passphrase()
-#    password = "".join(password_list)
     password_entry.insert(0, password)
- #   pyperclip.copy(password)
 
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 def save():
@@ -64,7 +47,8 @@ canvas.grid(row=0, column=1)
 #Labels
 website_label = Label(text="Website:")
 website_label.grid(row=1, column=0)
-email_label = Label(text="Email/Username:")
+email_label = Label(text="Email/U"
+                         "sername:")
 email_label.grid(row=2, column=0)
 password_label = Label(text="Password:")
 password_label.grid(row=3, column=0)
