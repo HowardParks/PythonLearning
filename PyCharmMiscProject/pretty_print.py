@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 import re
 from datetime import datetime as dt
+import xml.dom.minidom
 
 def search_pathlib(path, target):
     path = Path(path)
@@ -77,12 +78,8 @@ for file in files:
     age = get_file_age_in_seconds(file)
     if age > 3600:
         continue
-    try:
-        with open(file) as infile:
-            contents = infile.read()
-    except UnicodeError:
-        print(f"Trouble reading {file}")
-        continue
+    with open(file) as infile:
+        contents = infile.read()
     if ext == ".edi":
         term = contents[105]
         delim = contents[3]
@@ -90,67 +87,38 @@ for file in files:
         segments.pop()
         output = ''
         doctype = ''
-        filename = ''
+        fileparts=[]
         for seg in segments:
             elems = seg.split(delim)
             prefix = elems[0]
             if prefix == "ISA":
-                filename = elems[6].rstrip()+'-'+elems[8].rstrip()
+                fileparts.append(elems[6].rstrip()+'-'+elems[8].rstrip())
             elif prefix == 'GS':
-                filename = elems[1] + '-' + filename
+                fileparts.append(elems[1])
             elif prefix == 'ST':
-                doctype = elems[1]
+                fileparts.append(elems[1])
             elif prefix == 'B3':
-                filename += '-' + elems[2]
+                fileparts.append(elems[2])
             output += seg + term + "\n"
-        filename = filename + '.txt'
+        filename = '_'.join(fileparts) + '.txt'
     elif ext == ".xml":
         fileparts = []
-        isItTBC = len(tagdata('LoadGroupKey', contents)) > 0
-        if isItTBC:
-            fileparts.append(tagdata('LoadGroupKey',contents))
-            fileparts.append(tagdata('ShipperCode',contents))
+        dom = xml.dom.minidom.parseString(contents)
+        lgk = dom.getElementsByTagName('LoadGroupKey')
+        if len(lgk)>0:
+            sc = dom.getElementsByTagName('ShipperCode')[0]
+            fileparts.append(sc.firstChild.nodeValue)
+            fileparts.append(lgk[0].firstChild.nodeValue)
         else:
-            fileparts.append(tagdata('as400-bill-to-code', contents))
-            fileparts.append(tagdata('invoice-num', contents))
-            fileparts.append(tagdata('tour-num', contents))
+            as400BillToCode = dom.getElementsByTagName('as400-bill-to-code')[0].firstChild.nodeValue
+            fileparts.append(as400BillToCode)
+            invoiceNum = dom.getElementsByTagName('invoice-num')[0].firstChild.nodeValue
+            fileparts.append(invoiceNum)
+            tourNum = dom.getElementsByTagName('tour-num')[0].firstChild.nodeValue
+            fileparts.append(tourNum)
         filename = "_".join(fileparts) + ".xml"
-        ptr = 0
-        tags = []
-        while ptr < len(contents):
-            tagst = contents.find('<',ptr)
-            tagen = contents.find('>',ptr)+1
-            tag = contents[tagst:tagen]
-            tags.append({'tag':tag, 'st':tagst,'en':tagen})
-            ptr = tagen
-        output = ""
-        tab = '    '
-        depth = 0
-        skip = False
-        rctagOnly = re.compile("^<[^>/]+>")
-        rcendGroup = re.compile("^</[^>]+>")
-        for i in range(len(tags)):
-            if skip:
-                skip = False
-                continue
-            tag1 = tags[i]
-            try:
-                tag2 = tags[i+1]
-            except IndexError:
-                tag2 = tag1
-            if tag1['en'] < tag2['st']:
-                output += f"{tab*depth}{tag1['tag']}{contents[tag1['en']:tag2['st']]}{tag2['tag']}\n"
-                skip = True
-            elif re.fullmatch(rctagOnly, tag1['tag']):
-                output += f"{tab*depth}{tag1['tag']}\n"
-                depth += 1
-            elif re.fullmatch(rcendGroup, tag1['tag']):
-                depth -= 1
-                output += f"{tab*depth}{tag1['tag']}\n"
-            else:
-                output += f"{tab*depth}{tag1['tag']}\n"
+        output = dom.toprettyxml()
     elif ext == ".csv":
-            from datetime import datetime as dt
             words = parsecsv(contents)
             output = ''
             filename = "Issues.csv"
