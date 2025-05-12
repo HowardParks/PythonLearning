@@ -12,14 +12,6 @@ def search_pathlib(path, target):
         lsst.append(str(item))
     return lsst
 
-def tagdata(tag, html):
-    rc = re.compile(f"<{tag}>(\\w+)</{tag}>",re.A)
-    m = re.search(rc, html)
-    try:
-        return m.group(1)
-    except AttributeError:
-        return ""
-
 def get_file_age_in_seconds(file_path):
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")
