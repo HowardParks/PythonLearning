@@ -70,64 +70,87 @@ for file in files:
     age = get_file_age_in_seconds(file)
     if age > 3600:
         continue
-    with open(file) as infile:
-        contents = infile.read()
-    if ext == ".edi":
-        term = contents[105]
-        delim = contents[3]
-        segments = contents.split(term)
-        segments.pop()
-        output = ''
-        doctype = ''
-        fileparts=[]
-        for seg in segments:
-            elems = seg.split(delim)
-            prefix = elems[0]
-            if prefix == "ISA":
-                fileparts.append(elems[6].rstrip()+'-'+elems[8].rstrip())
-            elif prefix == 'GS':
-                fileparts.append(elems[1])
-            elif prefix == 'ST':
-                fileparts.append(elems[1])
-            elif prefix == 'B3':
-                fileparts.append(elems[2])
-            output += seg + term + "\n"
-        filename = '_'.join(fileparts) + '.txt'
-    elif ext == ".xml":
-        fileparts = []
-        dom = xml.dom.minidom.parseString(contents)
-        lgk = dom.getElementsByTagName('LoadGroupKey')
-        if len(lgk)>0:
-            sc = dom.getElementsByTagName('ShipperCode')[0]
-            fileparts.append(sc.firstChild.nodeValue)
-            fileparts.append(lgk[0].firstChild.nodeValue)
-        else:
-            as400BillToCode = dom.getElementsByTagName('as400-bill-to-code')[0].firstChild.nodeValue
-            fileparts.append(as400BillToCode)
-            invoiceNum = dom.getElementsByTagName('invoice-num')[0].firstChild.nodeValue
-            fileparts.append(invoiceNum)
-            tourNum = dom.getElementsByTagName('tour-num')[0].firstChild.nodeValue
-            fileparts.append(tourNum)
-        filename = "_".join(fileparts) + ".xml"
-        output = dom.toprettyxml()
-    elif ext == ".csv":
-            words = parsecsv(contents)
+    try:
+        with open(file) as infile:
+            contents = infile.read()
+        if ext == ".edi":
+            term = contents[105]
+            delim = contents[3]
+            segments = contents.split(term)
+            segments.pop()
             output = ''
-            filename = "Issues.csv"
-            n = dt.now()
-            for i in range(0,len(words)-8,8):
-                if words[i+5] == "Howard Parks <hparks@werner.com>" or words[i] == 'ID':
-                    if words[i] != 'ID':
-                        words[i+1],d1 = dateconvert(words[i+1])
-                        words[i+4],d2 = dateconvert(words[i+4])
-                        u2n = n - d1
-                        c2n = n - d2
-                        c2ns = str(c2n.days).rjust(3) + " days old"
-                        if words[i+3][0:11] == 'Incident - ':
-                            words[i+3] = words[i+3][11:]
-                    else:
-                        c2ns = 'Age'
-                    output += f"{words[i]:8} {words[i+1]:17} {words[i+3][0:40]:40} {words[i+4]:17} {c2ns:12} {words[i+6]:12}\n"
-    else:
-        continue
-    print(write_file(filename, output))
+            doctype = ''
+            fileparts=[]
+            for seg in segments:
+                elems = seg.split(delim)
+                prefix = elems[0]
+                if prefix == "ISA":
+                    fileparts.append(elems[6].rstrip()+'-'+elems[8].rstrip())
+                elif prefix == 'GS':
+                    fileparts.append(elems[1])
+                elif prefix == 'ST':
+                    fileparts.append(elems[1])
+                elif prefix == 'B3':
+                    fileparts.append(elems[2])
+                output += seg + term + "\n"
+            filename = '_'.join(fileparts) + '.txt'
+        elif ext == ".xml":
+            fileparts = []
+            dom = xml.dom.minidom.parseString(contents)
+            dE = dom.documentElement.tagName
+            if dE=='Order':
+                lgk = dom.getElementsByTagName('LoadGroupKey')[0]
+                sc = dom.getElementsByTagName('ShipperCode')[0]
+                fileparts=[sc.firstChild.nodeValue,lgk.firstChild.nodeValue]
+            elif dE=='Data':
+                as400BillToCode = dom.getElementsByTagName('as400-bill-to-code')[0].firstChild.nodeValue
+                invoiceNum = dom.getElementsByTagName('invoice-num')[0].firstChild.nodeValue
+                tourNum = dom.getElementsByTagName('tour-num')[0].firstChild.nodeValue
+                fileparts = [as400BillToCode,invoiceNum,tourNum]
+            elif dE[0:3]=='X12':
+                mch = re.match(r'X12_(\d{5})_(\d{3})',dE)
+                transaction = mch.group(2)
+                if transaction=='214':
+                    tour = dom.getElementsByTagName('B1001')[0].firstChild.nodeValue
+                    shipref = dom.getElementsByTagName('B1002')[0].firstChild.nodeValue
+                    shipmentStatus = dom.getElementsByTagName('AT701')[0].firstChild
+                    if shipmentStatus is None:
+                        shipmentStatus = dom.getElementsByTagName('AT703')[0].firstChild
+                    status = shipmentStatus.nodeValue
+                    fileparts = [transaction,tour,shipref,status]
+                elif transaction == '204':
+                    scac = dom.getElementsByTagName('B202')[0].firstChild.nodeValue
+                    shipref = dom.getElementsByTagName('B204')[0].firstChild.nodeValue
+                    doctype = dom.getElementsByTagName('B2A01')[0].firstChild.nodeValue
+                    fileparts = [transaction,scac,shipref,doctype]
+                else:
+                    fileparts=[dE]
+            else:
+                print(f"Did not know what to do with xml file {file}. Root is {dE}.")
+                fileparts = [dE]
+            filename = "_".join(fileparts) + ".xml"
+            output = dom.toprettyxml()
+        elif ext == ".csv":
+                words = parsecsv(contents)
+                output = ''
+                filename = "Issues.csv"
+                n = dt.now()
+                for i in range(0,len(words)-8,8):
+                    if words[i+5] == "Howard Parks <hparks@werner.com>" or words[i] == 'ID':
+                        if words[i] != 'ID':
+                            words[i+1],d1 = dateconvert(words[i+1])
+                            words[i+4],d2 = dateconvert(words[i+4])
+                            u2n = n - d1
+                            c2n = n - d2
+                            c2ns = str(c2n.days).rjust(3) + " days old"
+                            if words[i+3][0:11] == 'Incident - ':
+                                words[i+3] = words[i+3][11:]
+                        else:
+                            c2ns = 'Age'
+                        output += f"{words[i]:8} {words[i+1]:17} {words[i+3][0:40]:40} {words[i+4]:17} {c2ns:12} {words[i+6]:12}\n"
+        else:
+            continue
+        print(write_file(filename, output))
+    except Exception as err:
+        print(f"{file=}")
+        print(f"{err=}")
