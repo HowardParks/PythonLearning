@@ -26,7 +26,7 @@ def write_file(filename, outstuff):
     pdir = 'C:/Users/hparks/OneDrive - Werner Enterprises/Desktop/Pretty/'
     while os.path.exists(pdir + filename) and xtn != '.csv':
         counter += 1
-        filename = f"{basefile}_{counter:02}{xtn}"
+        filename = f"{basefile}_v{counter:02}{xtn}"
     outfile = open(pdir + filename, 'w')
     outfile.write(outstuff)
     return filename
@@ -86,12 +86,21 @@ for file in files:
                 prefix = elems[0]
                 if prefix == "ISA":
                     fileparts.append(elems[6].rstrip()+'-'+elems[8].rstrip())
-                elif prefix == 'GS':
-                    fileparts.append(elems[1])
                 elif prefix == 'ST':
                     fileparts.append(elems[1])
-                elif prefix == 'B3':
+                elif prefix == 'B3': # Invoice
                     fileparts.append(elems[2])
+                elif prefix=='B2': # Load Tender
+                    fileparts.append(elems[4])
+                elif prefix=='B2A': # Also Load Tender
+                    fileparts.append(elems[1])
+                elif prefix=='B10': # Shipment Status
+                    fileparts.append(elems[1])
+                elif prefix=='AT7': # Also Shipment Status
+                    if elems[3]=='':
+                        fileparts.append(elems[1])
+                    else:
+                        fileparts.append(elems[3])
                 output += seg + term + "\n"
             filename = '_'.join(fileparts) + '.txt'
         elif ext == ".xml":
