@@ -1,6 +1,6 @@
 class PassPhrase:
     def __init__(self):
-        with open('C://Users/hparks/OneDrive - Werner Enterprises/Python/PyCharmMiscProject/wordlywords.txt') as infile:
+        with open('C://Users/Owner/PycharmProjects/PythonLearning/PycharmMiscProject/wordlywords.txt') as infile:
 #        with open('C://Users/hparks/OneDrive - Werner Enterprises/Python/PyCharmMiscProject/words.txt') as infile:
             contents = infile.read()
         strings = contents.split("\n")

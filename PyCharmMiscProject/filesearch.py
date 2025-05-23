@@ -14,11 +14,11 @@ def search_pathlib(path, target):
 current_dir = input("Search directory: ")
 while current_dir != 'END':
     if current_dir == '':
-        current_dir = 'C://Users/hparks/OneDrive - Werner Enterprises'
-    elif current_dir == 'Git':
-        current_dir = 'C://Users/hparks/GitHub/WernerEnterprise'
-    elif current_dir == '210':
-        current_dir = 'C://Users/hparks/GitHub/WernerEnterprise/Mastery/210'
+        current_dir = 'C://Users/Owner'
+    # elif current_dir == 'Git':
+    #     current_dir = 'C://Users/hparks/GitHub/WernerEnterprise'
+    # elif current_dir == '210':
+    #     current_dir = 'C://Users/hparks/GitHub/WernerEnterprise/Mastery/210'
     print(f"Searching in {current_dir}")
     target = input("Search target: ")
     found_list = search_pathlib(current_dir, target)

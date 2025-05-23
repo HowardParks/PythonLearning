@@ -2,9 +2,10 @@ from codemachine import CodeMachine
 import json
 import re
 from passphrase import PassPhrase
+SAFE="C://Users/Owner/Downloads/psafeb.fil"
 
 def read_psafe():
-    with open("C://Users/hparks/OneDrive - Werner Enterprises/Documents/psafeb.fil","rb") as infile:
+    with open(SAFE,"rb") as infile:
         cba = infile.read()
     crypted = cba.decode('utf-16')
     psafe = {}
@@ -20,12 +21,11 @@ def read_psafe():
             continue
     return psafe, cm
 
-
 def write_psafe(ps, cm):
     js = json.dumps(ps)
     crypted = cm.cypher(js)
     oba = bytearray(crypted, 'utf-16')
-    with open('C://Users/hparks/OneDrive - Werner Enterprises/Documents/psafeb.fil', 'wb') as outfile:
+    with open(SAFE, 'wb') as outfile:
         outfile.write(oba)
 
 def regex_search(arr, regex):
