@@ -2,12 +2,13 @@ from codemachine import CodeMachine
 import json
 import re
 from passphrase import PassPhrase
-SAFE="C://Users/Owner/Downloads/psafeb.fil"
+# Trying with utf-8, psafeb.fil is still intact at 16
+SAFE="C://Users/Owner/Downloads/psafeb8.fil"
 
 def read_psafe():
     with open(SAFE,"rb") as infile:
         cba = infile.read()
-    crypted = cba.decode('utf-16')
+    crypted = cba.decode('utf-8')  # trying with 8
     psafe = {}
     while True:
         try:
@@ -24,7 +25,7 @@ def read_psafe():
 def write_psafe(ps, cm):
     js = json.dumps(ps)
     crypted = cm.cypher(js)
-    oba = bytearray(crypted, 'utf-16')
+    oba = bytearray(crypted, 'utf-8')  # trying with 8
     with open(SAFE, 'wb') as outfile:
         outfile.write(oba)
 
@@ -154,4 +155,8 @@ while option != 'END':
             else:
                 counter += 1
             print()
+    elif option == '5':
+        newkey=input("Enter new password safe key: ")
+        cm = CodeMachine(newkey)
+        write_psafe(psafe,cm)
     option = input("[1] Lookup\n 2  New\n 3  Edit\n 4  List\nEND Exit: ")
