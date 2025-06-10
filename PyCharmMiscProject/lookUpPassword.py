@@ -1,33 +1,6 @@
-from codemachine import CodeMachine
-import json
 import re
 from passphrase import PassPhrase
-# Trying with utf-8, psafeb.fil is still intact at 16
-SAFE="C://Users/Owner/Downloads/psafeb8.fil"
-
-def read_psafe():
-    with open(SAFE,"rb") as infile:
-        cba = infile.read()
-    crypted = cba.decode('utf-8')  # trying with 8
-    psafe = {}
-    while True:
-        try:
-            key=input("Enter secret key: ")
-#            key = getpass.getpass()
-            cm = CodeMachine(key)
-            js = cm.cypher(crypted)
-            psafe = json.loads(js)
-            break
-        except json.decoder.JSONDecodeError:
-            continue
-    return psafe, cm
-
-def write_psafe(ps, cm):
-    js = json.dumps(ps)
-    crypted = cm.cypher(js)
-    oba = bytearray(crypted, 'utf-8')  # trying with 8
-    with open(SAFE, 'wb') as outfile:
-        outfile.write(oba)
+from psafefile import PsafeFile
 
 def regex_search(arr, regex):
     possibles = []
@@ -36,25 +9,6 @@ def regex_search(arr, regex):
             possibles.append(k)
     if len(possibles) > 0:
         print(f"Did you maybe mean {possibles}?")
-
-
-def binary_search_regex(arr, regex):
-    low = 0
-    high = len(arr) - 1
-    rx = regex.lower()
-    rc = re.compile(f"^{rx}.*$")
-    arrl = list(map(str.lower(), arr))
-    arrl.sort()
-    while low <= high:
-        mid = (low + high) // 2
-        holdr = arrl[mid]
-        if re.search(rc, arrl[mid]):
-            return mid  # Regex found in the middle element
-        elif arrl[mid] < rx:
-            low = mid + 1
-        else:
-            high = mid - 1
-    return -1  # Regex not found in the list
 
 def f(title):
     a = input(f"{title}: ")
@@ -74,7 +28,10 @@ def getnewpassword():
         if resp[0] == 'y':
             return newpassword
 
-(psafe, cm) = read_psafe()
+#(psafe, cm) = read_psafe()
+key = input("Enter Secret Key: ")
+psafefile = PsafeFile(key)
+psafe = psafefile.read()
 keylist = list(psafe.keys())
 keylist.sort()
 option = input("[1] Lookup\n2 New\n3 Edit\n4 List\nEND Exit: ")
@@ -95,7 +52,7 @@ while option != 'END':
                 deets[t] = getnewpassword()
         group = deets['Group/Title']
         psafe[group] = deets
-        write_psafe(psafe, cm)
+        psafefile.write(psafe)
     elif option == "3": ## Edit
         try:
             group = input("Enter the password name: ")
@@ -114,8 +71,6 @@ while option != 'END':
                     if resp != '' and resp[0] == 'y':
                         newval = getnewpassword()
                         print(f"    {newval}")
-                    else:
-                        newval = input(f"New {field}: ")
                 elif field == 'Group/Title':
                     newval = input(f"New {field}: ")
                     if newval != '':
@@ -126,7 +81,7 @@ while option != 'END':
                     psafe[group][field] = newval
                     changemade = True
         if changemade:
-            write_psafe(psafe, cm)
+            psafefile.write(psafe)
     elif option == "4":
         groups = list(psafe.keys())
         groups.sort()
@@ -157,6 +112,6 @@ while option != 'END':
             print()
     elif option == '5':
         newkey=input("Enter new password safe key: ")
-        cm = CodeMachine(newkey)
-        write_psafe(psafe,cm)
+        psafefile = PsafeFile(newkey)
+        psafefile.write(psafe)
     option = input("[1] Lookup\n 2  New\n 3  Edit\n 4  List\nEND Exit: ")
