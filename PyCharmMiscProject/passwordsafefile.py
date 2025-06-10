@@ -3,7 +3,7 @@ import json
 # Trying with utf-8, psafeb.fil is still intact at 16
 SAFE="C://Users/Owner/Downloads/psafeb8.fil"
 
-class PsafeFile:
+class PassWordSafeFile:
     def __init__(self, key):
         self.codeMachine = CodeMachine(key)
 

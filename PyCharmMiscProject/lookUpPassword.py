@@ -1,6 +1,7 @@
 import re
+
 from passphrase import PassPhrase
-from psafefile import PsafeFile
+from passwordsafefile import PassWordSafeFile
 
 def regex_search(arr, regex):
     possibles = []
@@ -17,7 +18,7 @@ def f(title):
 def titles():
     import random
     example = random.choice(keylist)
-    rando = psafe[example]
+    rando = passwordsafe[example]
     return list(rando.keys())
 
 def getnewpassword():
@@ -28,18 +29,17 @@ def getnewpassword():
         if resp[0] == 'y':
             return newpassword
 
-#(psafe, cm) = read_psafe()
 key = input("Enter Secret Key: ")
-psafefile = PsafeFile(key)
-psafe = psafefile.read()
-keylist = list(psafe.keys())
+passwordsafefile = PassWordSafeFile(key)
+passwordsafe = passwordsafefile.read()
+keylist = list(passwordsafe.keys())
 keylist.sort()
 option = input("[1] Lookup\n2 New\n3 Edit\n4 List\nEND Exit: ")
 while option != 'END':
     if option == '' or option == '1': ### Lookup
         try:
             group = input("Enter the password title: ")
-            record = psafe[group]
+            record = passwordsafe[group]
             print(f"Key:{group}\tUser:{record['Username']}\tPwd:{record['Password']}\tURL:{record['URL']}")
         except KeyError:
             print(f"Did not find {group}")
@@ -51,12 +51,12 @@ while option != 'END':
             if t == "Password" and deets[t]=='':
                 deets[t] = getnewpassword()
         group = deets['Group/Title']
-        psafe[group] = deets
-        psafefile.write(psafe)
+        passwordsafe[group] = deets
+        passwordsafefile.write(passwordsafe)
     elif option == "3": ## Edit
         try:
             group = input("Enter the password name: ")
-            pdict = psafe[group]
+            pdict = passwordsafe[group]
         except KeyError:
             print(f"Did not find {group}")
             regex_search(keylist, group)
@@ -78,12 +78,12 @@ while option != 'END':
                 else:
                     newval = input(f"New {field}: ")
                 if newval != '':
-                    psafe[group][field] = newval
+                    passwordsafe[group][field] = newval
                     changemade = True
         if changemade:
-            psafefile.write(psafe)
+            passwordsafefile.write(passwordsafe)
     elif option == "4":
-        groups = list(psafe.keys())
+        groups = list(passwordsafe.keys())
         groups.sort()
         last = len(groups) - 1
         counter = 0
@@ -95,7 +95,7 @@ while option != 'END':
                 counter += 1
                 group = groups[counter]
             print(f"GROUP:{group}")
-            for field, value in psafe[group].items():
+            for field, value in passwordsafe[group].items():
                 if value != '':
                     print(f"    {field}: {value}")
             option = input("[c] cont, f fwd 5, b back 5, e end ... ").lower()
@@ -112,6 +112,6 @@ while option != 'END':
             print()
     elif option == '5':
         newkey=input("Enter new password safe key: ")
-        psafefile = PsafeFile(newkey)
-        psafefile.write(psafe)
+        passwordsafefile = PassWordSafeFile(newkey)
+        passwordsafefile.write(passwordsafe)
     option = input("[1] Lookup\n 2  New\n 3  Edit\n 4  List\nEND Exit: ")
