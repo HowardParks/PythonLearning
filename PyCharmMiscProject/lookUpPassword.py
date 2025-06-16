@@ -89,7 +89,7 @@ while option != 'END':
         counter = 0
         group = groups[counter]
         option = 'c'
-        while option != 'e':
+        while option != 'e' and counter <= last:
             group = groups[counter]
             while group == '':
                 counter += 1
