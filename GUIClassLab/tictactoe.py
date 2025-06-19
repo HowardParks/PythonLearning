@@ -24,7 +24,7 @@ def solved(xes, oes):
 
 
 def clicked(event):
-    global player, xes, oes, gameover
+    global player, xes, oes
     print(event)
     index = event.widget.index
     if index in xes | oes:
@@ -38,24 +38,27 @@ def clicked(event):
         oes.add(index)
         event.widget.square = "O"
     print(f"{player} clicked {index}")
-    winner = solved(xes, oes)
-    if winner is not None:
-        messagebox.showinfo(title="GameOver", message=f"{winner} wins!")
-        gameover = True
-    elif len(xes) + len(oes) == 9:
-        messagebox.showinfo(title="GameOver", message="Cat's Game!")
-        gameover = True
-    if gameover:
-        window.destroy()
-    else:
-        player = 1 - player
-        print(f"Player is now {player}")
-        while player == 0:
-            computermove()
+    player = 1 - player
 
 def computermove():
     choice = random.randint(0,8)
     canvases[choice].event_generate('<1>', x=10, y=10)
+
+def playgame():
+    global player, oes, xes
+    gameover = False
+    while not gameover:
+        if player == 0:
+            computermove()
+        winner = solved(xes, oes)
+        if winner is not None:
+            messagebox.showinfo(title="GameOver", message=f"{winner} wins!")
+            gameover = True
+        elif len(xes) + len(oes) == 9:
+            messagebox.showinfo(title="GameOver", message="Cat's Game!")
+            gameover = True
+
+        window.update()
 
 window=tk.Tk()
 canvases = []
@@ -66,12 +69,12 @@ for row in range(3):
         canvases[index].grid(row=row, column=col)
         canvases[index].bind('<1>', func=clicked)
 #window.bind_all('<1>', func=clicked)
-start = tk.Button(text="Start", command=computermove)
-start.grid(row=3, column=1)
+# start = tk.Button(text="Start", command=playgame)
+# start.grid(row=3, column=1)
 
 xes = set(())
 oes = set(())
 player = 0
-gameover = False
-
-window.mainloop()
+playgame()
+window.destroy()
+#window.mainloop()
