@@ -15,50 +15,47 @@ def drawx(c):
 def drawo(c):
     c.create_oval(7,7,29,29,outline='Green',width=3)
 
-def solved(player, sofar):
+def solved(xes, oes):
     solutions = [{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {2, 4, 6}]
-    which={0:'X', 1:'O'}
-    if len(sofar) >= 3:
-        for solution in solutions:
-            if solution <= sofar:
-                messagebox.showinfo(title="GameOver",message=f"{which[player]} wins!")
-                window.destroy()
+    for who,sofar in {'X': xes, 'O': oes}.items():
+        if any([win for win in solutions if win <= sofar]):
+            return who
+    return None
+
 
 def clicked(event):
-    global player, window, xes, oes
-    try:
-        print(f"Canvas {event.widget.index} clicked")
-        if event.widget.index in xes | oes:
-            return
-    except AttributeError:
-        return
+    global player, xes, oes, gameover
+    print(event)
+    index = event.widget.index
+    if index in xes | oes:
+       return
     if player == 0:
         drawx(event.widget)
-        xes.add(event.widget.index)
+        xes.add(index)
         event.widget.square = "X"
-        solved(player,xes)
     else:
         drawo(event.widget)
-        oes.add(event.widget.index)
+        oes.add(index)
         event.widget.square = "O"
-        solved(player,oes)
-    player = 1 - player
+    print(f"{player} clicked {index}")
+    winner = solved(xes, oes)
+    if winner is not None:
+        messagebox.showinfo(title="GameOver", message=f"{winner} wins!")
+        gameover = True
+    elif len(xes) + len(oes) == 9:
+        messagebox.showinfo(title="GameOver", message="Cat's Game!")
+        gameover = True
+    if gameover:
+        window.destroy()
+    else:
+        player = 1 - player
+        print(f"Player is now {player}")
+        while player == 0:
+            computermove()
 
 def computermove():
-    while True:
-        choice = random.randint(0,8)
-        if canvases[choice].square == '':
-            break
+    choice = random.randint(0,8)
     canvases[choice].event_generate('<1>', x=10, y=10)
-
-def playgame():
-    global xes, oes, player
-    print('Game started')
-    while len(xes) + len(oes) < 9:
-        computermove()
-        messagebox.showinfo(message="Your turn!")
-    messagebox.showinfo(title="GameOver", message="Cat's Game!")
-    window.destroy()
 
 window=tk.Tk()
 canvases = []
@@ -69,12 +66,12 @@ for row in range(3):
         canvases[index].grid(row=row, column=col)
         canvases[index].bind('<1>', func=clicked)
 #window.bind_all('<1>', func=clicked)
-starter = tk.Button(text="Start", command=playgame)
-starter.grid(row=3,column=1)
+start = tk.Button(text="Start", command=computermove)
+start.grid(row=3, column=1)
 
 xes = set(())
 oes = set(())
 player = 0
+gameover = False
 
 window.mainloop()
-
