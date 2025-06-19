@@ -67,10 +67,8 @@ for row in range(3):
         index = row*3 + col
         canvases.append(TicTac(window, index, bg="DarkGray",bd=2,height=30,width=30))
         canvases[index].grid(row=row, column=col)
-        canvases[index].bind('<1>', func=clicked)
-#window.bind_all('<1>', func=clicked)
-# start = tk.Button(text="Start", command=playgame)
-# start.grid(row=3, column=1)
+        # canvases[index].bind('<1>', func=clicked)
+window.bind_all('<1>', func=clicked)
 
 xes = set(())
 oes = set(())
