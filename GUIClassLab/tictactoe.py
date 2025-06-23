@@ -24,7 +24,7 @@ def solved(xes, oes):
 
 
 def clicked(event):
-    global player, xes, oes
+    global player
     print(event)
     index = event.widget.index
     if index in xes | oes:
@@ -45,7 +45,6 @@ def computermove():
     canvases[choice].event_generate('<1>', x=10, y=10)
 
 def playgame():
-    global player, oes, xes
     gameover = False
     while not gameover:
         if player == 0:
