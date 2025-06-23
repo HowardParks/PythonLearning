@@ -4,8 +4,13 @@ import random
 # spent way to much time trying to  map mouse click
 #
 # Lab 3.1.1.6 Gui unit of OpenEDG class
+# The US States game does something with determining which state has been
+# clicked. That would need to be studied
+# Did learn how to create X and O on a canvas and create a PNG file that
+# can be loaded as an image and applied to a button
+#
 # Not completely satisfied - extended canvas to clicks can communicate
-# which element among a set of 9
+# which element among a se#t of 9
 # class TicTac(tk.Canvas):
 #     def __init__(self, parent, index, **kwargs):
 #         super().__init__(parent, **kwargs)
