@@ -1,7 +1,7 @@
 import tkinter as tk
 import tkinter.messagebox as messagebox
 import random
-# doesn't recognize O as winner, kept going
+
 class TicTac(tk.Canvas):
     def __init__(self, parent, index, **kwargs):
         super().__init__(parent, **kwargs)
