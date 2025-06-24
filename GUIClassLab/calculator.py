@@ -1,63 +1,90 @@
 import tkinter as tk
-from tkinter import messagebox
+from functools import partial
+# need to keep the float version of current
 
-def doTheMath():
-    global first, second, switch
-    intmath = True
-    arg1 = first.get()
-    arg2 = second.get()
-    operation = switch.get()
-    try:
-        if '.' in arg1:
-            arg1 = float(arg1)
-            intmath = False
-        else:
-            arg1 = int(arg1)
-        if '.' in arg2:
-            arg2 = float(arg2)
-            intmath = False
-        else:
-            arg2 = int(arg2)
-    except ValueError:
-        tk.messagebox.showerror("Gah!", "Invalid Inputs")
-        return
-    if operation == 0:
-        result=arg1 + arg2
-    elif operation == 1:
-        result = arg1 - arg2
-    elif operation == 2:
-        result = arg1 * arg2
-    elif operation == 3:
-        if arg2 == 0:
-            tk.messagebox.showerror('Huh?',"I don't know what to do with this")
-            return
-        result = arg1/arg2
-    if intmath:
-        result = int(result)
-    tk.messagebox.showinfo('Got it?',str(result))
+def isfloat(num):
+    return num.replace('.','').replace('-','').isnumeric()
 
-# Write your code here.
+def click(key):
+    global displayvar, register, pending
+    current = displayvar.get()
+    result = current
+    if key in numbers:
+        if current in ops or float(current) == 0:
+            result = key
+        else:
+            if len(result) < 10:
+                result = current + key
+    elif key == 'C':
+        result = '0'
+    elif key in ops:
+        register = float(current)
+        result = key
+        pending = key
+    elif key == '=':
+        if  pending == '+':
+            result = str(register + float(current))
+        if  pending == '-':
+            result = str(register - float(current))
+        if  pending == '*':
+            result = str(register * float(current))
+        if  pending == '/':
+            if float(current) == 0.0:
+                pending = ''
+                result = str(register)
+            else:
+                result = str(register / float(current))
+        if 'e-' in result:
+            result = f"{float(result):.10f}"
+        register = float(result)
+        pending = ''
+    elif key == '.':
+        if key not in current:
+            if len(result) < 10:
+                result = current + key
+    elif key == '+/-':
+        result = str(float(current)*-1)
+    else:
+        result = key
+    if len(result) > 10:
+        result = result.ljust(10,'0')[:10]
+    if result.endswith(".0"):
+        result = result.replace(".0","")
+    if result.endswith('.'):
+        result = result.replace(",","")
+    displayvar.set(result)
 window = tk.Tk()
-window.title('Calculator')
+window.geometry("250x150")
 
-switch = tk.IntVar()
-switch.set(1)
+displayvar = tk.StringVar()
+displayvar.set('0')
+display = tk.Label(window, bg="WHITE", fg="BLACK", textvariable=displayvar, width=10, font=('Courier New', 12))
+display.grid(row=1,column=1,columnspan=5)
 
-first = tk.Entry(window, width=30)
-first.grid(row=2,column=1,rowspan=2,sticky="")
-second = tk.Entry(window,width=30)
-second.grid(row=2,column=3,rowspan=2,sticky="")
+numbers = {}
+buttons =  {}
+engage = {}
 
-plusbutton = tk.Radiobutton(window, text="+", variable=switch, value=0)
-plusbutton.grid(row=1,column=2)
-minusbutton = tk.Radiobutton(window, text="-", variable=switch, value=1)
-minusbutton.grid(row=2,column=2)
-timesbutton = tk.Radiobutton(window, text="*", variable=switch, value=2)
-timesbutton.grid(row=3,column=2)
-dividebutton = tk.Radiobutton(window, text="/", variable=switch, value=3)
-dividebutton.grid(row=4,column=2)
+val = '0'
+numbers[val] = tk.Button(window, text=val, bg="LightGray", command=partial(click,val), padx=1, width=5)
+numbers[val].grid(row=5, column=1)
+for row in [4,3,2]:
+    for col in [1,2,3]:
+        val = str(int(val) + 1)
+        numbers[val] = tk.Button(window, text=val, bg="LightGray", command=partial(click,val), padx=1, width=5)
+        numbers[val].grid(row=row, column=col)
 
-evaluate = tk.Button(window, text='Evaluate', command=doTheMath)
-evaluate.grid(row=5,column=2)
+ops = {'+': (2, 5), '-': (3, 5), '*': (4, 5), '/': (5, 5)}
+for p in ops:
+    buttons[p] = tk.Button(window, text=p, bg="LightGray", command=partial(click,p), padx=1, width=5)
+    buttons[p].grid(row=ops[p][0], column=ops[p][1] )
 
+
+other ={'=':(4,4),'+/-':(5,4),'C':(5,2),'.':(5,3)}
+for p in other:
+    buttons[p] = tk.Button(window, text=p, bg="LightGray", command=partial(click,p), padx=1, width=5)
+    buttons[p].grid(row=other[p][0], column=other[p][1] )
+
+register = 0.0
+pending = None
 window.mainloop()
