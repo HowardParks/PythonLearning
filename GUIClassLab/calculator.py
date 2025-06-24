@@ -6,11 +6,11 @@ def isfloat(num):
     return num.replace('.','').replace('-','').isnumeric()
 
 def click(key):
-    global displayvar, register, pending
-    current = displayvar.get()
+    global entryvar, register, pending
+    current = entryvar.get()
     result = current
     if key in numbers:
-        if current in ops or float(current) == 0:
+        if current in ops or (current.isnumeric() and  float(current) == 0):
             result = key
         else:
             if len(result) < 10:
@@ -38,27 +38,30 @@ def click(key):
             result = f"{float(result):.10f}"
         register = float(result)
         pending = ''
+        if result.endswith(".0") and result != '.0':
+            result = result.replace(".0", "")
+        if result.endswith('.') and result != '.':
+            result = result.replace(",", "")
     elif key == '.':
-        if key not in current:
+        if current.isnumeric():
             if len(result) < 10:
                 result = current + key
+        else:
+            result = key
     elif key == '+/-':
         result = str(float(current)*-1)
     else:
         result = key
     if len(result) > 10:
         result = result.ljust(10,'0')[:10]
-    if result.endswith(".0"):
-        result = result.replace(".0","")
-    if result.endswith('.'):
-        result = result.replace(",","")
-    displayvar.set(result)
+    entryvar.set(result)
 window = tk.Tk()
 window.geometry("250x150")
+window.title("Calculator")
 
-displayvar = tk.StringVar()
-displayvar.set('0')
-display = tk.Label(window, bg="WHITE", fg="BLACK", textvariable=displayvar, width=10, font=('Courier New', 12))
+entryvar = tk.StringVar()
+entryvar.set('0')
+display = tk.Entry(window, bg="WHITE", fg="BLACK", justify=tk.RIGHT, textvariable=entryvar, width=10, font=('Courier New', 12))
 display.grid(row=1,column=1,columnspan=5)
 
 numbers = {}
