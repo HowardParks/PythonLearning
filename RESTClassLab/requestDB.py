@@ -106,6 +106,7 @@ def enter_production_year():
 # returns int or None  (if user enters an empty line);
     year = input("Car production year: ")
     if year == '' or not year.isnumeric() or not 1900 <= int(year) <= 2000:
+        print("Vintage Cars ONLY!")
         return None
     return int(year)
 
@@ -113,6 +114,7 @@ def enter_name(what):
     name = input(f"Car {what}: ")
     if name_is_valid(name):
         return name
+    print("Invalid name - spaces, letters, numbers only!")
     return None
 # allows user to enter car's name (brand or model) and checks if it's valid;
 # uses name_is_valid() to check the entered name;
@@ -153,6 +155,9 @@ def input_car_data(with_id):
             r = eval(f"enter_{f}()")
             if r is None:
                 break
+            if f == 'id' and check_server(r):
+                print("Id already in use")
+                return None
             car[f] = r
     if r is not None:
         return car
