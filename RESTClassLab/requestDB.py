@@ -1,20 +1,30 @@
 import requests
 import json
 
-URL = "http://localhost:3000"
+URL = "http://localhost:3000/cars"
 key_names = ["id", "brand", "model", "production_year", "convertible"]
 key_widths = [10, 15, 10, 20, 15]
 h_content = {'Content-Type': 'application/json'}
+
+def yn2s(conv):
+    if type(conv) is bool:
+        if conv:
+            return 'y'
+        else:
+            return 'n'
+    else:
+        return conv
 
 def check_server(cid=None):
 # returns True or False;
 # when invoked without arguments simply checks if server responds;
 # invoked with car ID checks if the ID is present in the database;
+# entries disappear from the database after this function when using head
     try:
         if cid is not None:
-            reply = requests.head(f"{URL}/cars/{cid}")
+            reply = requests.get(f"{URL}/{cid}")
         else:
-            reply = requests.head(URL)
+            reply = requests.get(URL)
     except Exception  as e:
         print(e)
         return False
@@ -50,18 +60,18 @@ def print_header():
 # prints elegant cars table header;
 
 def print_car(car):
-    if car['convertible']:
-        car['convertible'] = 'y'
-    else:
-        car['convertible'] = 'n'
     for (n, w) in zip(key_names, key_widths):
         print(str(car[n]).ljust(w), end='| ')
     print()
 # prints one car's data in a way that fits the header;
 
 def list_cars():
-    print_header()
+    reply = requests.get(URL+"?_sort=id")
+    if reply.status_code != 200:
+        return
 
+    print_header()
+    json = reply.json()
     if type(json) is list:
         for car in json:
             print_car(car)
@@ -85,7 +95,7 @@ def enter_id():
     id = input("Car ID (empty string to exit): ")
     if id == '' or not id.isdigit():
         return None
-    return(id)
+    return id
 # allows user to enter car's ID and checks if it's valid;
 # valid ID consists of digits only;
 # returns int or None (if user enters an empty line);
@@ -127,18 +137,20 @@ def delete_car():
     id = enter_id()
     if id is not None:
         if check_server(id):
-            pass
+            reply = requests.delete(f"{URL}/{id}")
+            if reply.status_code == requests.codes.ok:
+                print("Deleted")
         else:
-            print("Car id invalid")
+            print("Car id not found")
 # asks user for car's ID and tries to delete it from database;
 
 
 def input_car_data(with_id):
-    fun = [enter_id, enter_brand, enter_model, enter_production_year, enter_convertible]
     car = {}
-    for fn, f in zip(fun, key_names):
+    r = None
+    for f in key_names:
         if f != 'id' or with_id:
-            r = fn()
+            r = eval(f"enter_{f}()")
             if r is None:
                 break
             car[f] = r
@@ -154,11 +166,10 @@ def input_car_data(with_id):
 def add_car():
     car = input_car_data(True)
     if car is not None:
-        putaddr = f"{URL}/cars"
         try:
-            reply = requests.post(putaddr, headers=h_content, data=json.dumps(car))
-            reply.raise_for_status()
-            print("Inserted")
+            reply = requests.post(URL, headers=h_content, data=json.dumps(car))
+            if reply.status_code == requests.codes.ok:
+                print("Added")
         except Exception as e:
             print(e)
 # invokes input_car_data(True) to gather car's info and adds it to the database;
@@ -166,17 +177,17 @@ def add_car():
 
 def update_car():
     id = enter_id()
+    if id is None:
+        return
     if check_server(id):
         car = input_car_data(False)
         if car != None:
             car['id'] = id
-            reply = requests.put(URL + "/cars/" + id, headers=h_content, data=json.dumps(car))
-            print(reply.status_code)
-            if reply.status_code == requests.codes.ok:
+            reply = requests.put(f"{URL}/{id}", headers=h_content, data=json.dumps(car))
+            if reply.status_code == 2001:
                 print("Updated")
     else:
         print("Car not in database")
-
 # invokes enter_id() to get car's ID if the ID is present in the database;
 # invokes input_car_data(False) to gather new car's info and updates the database;
 
