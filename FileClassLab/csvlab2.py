@@ -1,51 +1,33 @@
 import csv
 
-report = {}
-
-def update_report(en,category,value):
-    if en not in report:
-        report[en] = {'Candidate':[],
-                      'Pass':0,
-                      'Fail':0,
-                        'Best':-1,
-                        'Worst':101}
-    if type(value) is str and value in 'Pass,Fail':
-        report[en][value] += 1
-    elif category == "Candidate":
-        if value not in report[en][category]:
-            report[en][category].append(value)
-    elif category == 'Score':
-        hi = report[en]['Best']
-        lo = report[en]['Worst']
-        if value > hi:
-            report[en]['Best'] = value
-        elif value < lo:
-            report[en]['Worst'] = value
-
-
+report = []
+candlist = {}
+fieldnames = ['Exam Name','Number of Candidates','Number of Passed Exams','Best Score','Worst Score']
 with open('exam_results.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     for dict in reader:
-        ci = dict['Candidate ID']
         en = dict['Exam Name']
+        if en not in report:
+            default = [en, 0, 0, -1, 101]
+            report[en] = {k:v for k,v in zip(fieldnames,default)}
+            candlist[en] = []
+        ci = dict['Candidate ID']
         sc = int(dict['Score'])
         gr = dict['Grade']
-        update_report(en,'Candidate',ci)
-        update_report(en, 'Score', sc)
-        update_report(en, 'Grade', gr)
+        if ci not in candlist[en]:
+            candlist[en].append(ci)
+        report[en]["Number of Candidates"] = len(candlist[en])
+        if gr == "Pass":
+            report[en]['Number of Passed Exams'] += 1
+        if gr == "Fail":
+            report[en]['Number of Failed Exams'] += 1
+        if sc > report[en]['Best Score']:
+            report[en]['Best Score'] = sc
+        if sc < report[en]['Worst Score']:
+            report[en]['Worst Score'] = sc
 
-fieldnames = ['Exam Name','Number of Candidates','Number of Passed Exams','Best Score','Worst Score']
-# print(report)
-with open('examreport.csv','w',newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow(fieldnames)
-    for examtype in report.keys():
-        writer.writerow([examtype,len(report[examtype]['Candidate']),report[examtype]['Pass'],report[examtype]['Fail'],report[examtype]['Best'],report[examtype]['Worst']])
+with open('examreportdict.csv',newlines='') as csvfile:
+    writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
 
-# with open('examreportd.csv','w',newline='') as csvfile:
-#     writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
-#     writer.writeheaders()
-#
-#     for examtype in report.keys():
-#         report[examtype]['Candidate'] = len(report[examtype]['Candidate'])
-#         writer.writerow([examtype,len(report[examtype]['Candidate']),report[examtype]['Pass'],report[examtype]['Fail'],report[examtype]['Best'],report[examtype]['Worst']])
+    writer.writeheader()
+    writer.writerow(report)
