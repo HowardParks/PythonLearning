@@ -1,4 +1,10 @@
 class PassPhrase:
+    DEFAULT_CHARSET = {
+        'lowercase': 'abcdefghijkmnopqrstuvwxyz',
+        'uppercase': 'ABCDEFGHJKLMNPQRSTUVWXYZ',
+        'digit': '23456789',
+        'special': '!@#$%&*'}
+
     def __init__(self):
         with open('C://Users/Owner/PycharmProjects/PythonLearning/PycharmMiscProject/wordlywords.txt') as infile:
 #        with open('C://Users/hparks/OneDrive - Werner Enterprises/Python/PyCharmMiscProject/words.txt') as infile:
@@ -19,25 +25,75 @@ class PassPhrase:
                 return word
         return word
 
-    def passphrase(self,joiner=' '):
+    def passphrase(self,comp):
         import random
         random.seed()
         wordlist = self.words
-        while True:
-            candidates = random.choices(wordlist, k=3)
-            for _ in range(0,3):
-                l = random.randint(0,2)
-                w = self.insertdigit(candidates[l])
-                if w != candidates[l]:
-                    candidates[l] = w
-                    l = (l + 2) % 3
-                    candidates[l] = candidates[l].capitalize()
-                    return joiner.join(candidates)
+        candidates = random.choices(wordlist, k=comp['length'])
+        l = random.randrange(len(candidates))
+        if 'uppercase' in comp:
+            candidates[l] = candidates[l].capitalize()
+        if 'digit' in comp:
+            candidates[l] = self.insertdigit(candidates[l])
+        if 'special' in comp:
+            spch = random.choice(list(comp['special']['selectfrom']))
+            candidates[l] = candidates[l] + spch
+        if 'delim' in comp:
+            joiner = comp['delim']
+        else:
+            joiner = ''
+        return joiner.join(candidates)
+
+    def get_composition(self):
+        composition = {}
+        resp = input("What is the total length of the password/phrase and what is it composed of? ")
+        if resp == '':
+            resp = '12 chars'
+        if resp.endswith('words'):
+            composition['raw'] = 'words'
+            delim = input("Delimiter to use between words? ")
+            if delim != '':
+                composition['delim'] = delim
+        elif resp.endswith('chars'):
+            composition['raw'] = 'chars'
+        resp = resp[:-5]
+        composition['length'] = int(resp)
+        for chtype in ['lowercase', 'uppercase', 'digit', 'special']:
+            resp = input(f"Will this password include {chtype}? ").lower()
+            if resp == 'y':
+                resp = input(f"Minimum number of {chtype}? ")
+                composition[chtype] = {}
+                composition[chtype]['min'] = int(resp)
+                resp = input(f"Use specific {chtype} charset? ").lower()
+                if resp == 'y':
+                    resp = input("Enter special charset: ")
+                else:
+                    resp = PassPhrase.DEFAULT_CHARSET[chtype]
+                composition[chtype]['selectfrom'] = resp
+        return composition
+
+    def password(self, composition):
+        import random
+        random.seed()
+        letters = []
+        selectlist = []
+        chtypes = []
+        # build a list containing the minimums
+        for chtype in ['lowercase', 'uppercase', 'digit', 'special']:
+            if chtype in composition:
+                slist = list(composition[chtype]['selectfrom'])
+                letters.extend(random.choices(slist, k=composition[chtype]['min']))
+                selectlist.extend(slist)
+                chtypes.append(chtype)
+        while len(letters) < composition['length']:
+            letters.append(random.choice(selectlist))
+        random.shuffle(letters)
+        return ''.join(letters)
 
 if __name__ == "__main__":
     pp = PassPhrase()
-    print(pp.passphrase())
-    print(pp.passphrase())
-    print(pp.passphrase())
-    print(pp.passphrase())
-    print(pp.passphrase())
+    comp = pp.get_composition()
+    if comp['raw'] == 'chars':
+        print(pp.password(comp))
+    else:
+        print(pp.passphrase(comp))
