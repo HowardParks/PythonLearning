@@ -1,3 +1,5 @@
+from json import JSONDecodeError
+
 from codemachine import CodeMachine
 import json
 # Trying with utf-8, psafeb.fil is still intact at 16
@@ -13,7 +15,10 @@ class PassWordSafeFile:
         crypted = cba.decode('utf-8')  # trying with 8
         psafe = {}
         js = self.codeMachine.cypher(crypted)
-        psafe = json.loads(js)
+        try:
+            psafe = json.loads(js)
+        except JSONDecodeError:
+            return None
         return psafe
 
     def write(self, psafe):

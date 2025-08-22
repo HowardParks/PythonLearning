@@ -29,14 +29,17 @@ def getnewpassword():
         if resp[0] == 'y':
             return newpassword
 
-key = input("Enter Secret Key: ")
-passwordsafefile = PassWordSafeFile(key)
-passwordsafe = passwordsafefile.read()
+passwordsafe =  None
+while passwordsafe is None:
+    key = input("Enter Secret Key: ")
+    passwordsafefile = PassWordSafeFile(key)
+    passwordsafe = passwordsafefile.read()
 keylist = list(passwordsafe.keys())
 keylist.sort()
 option = input("[1] Lookup\n2 New\n3 Edit\n4 List\nEND Exit: ")
 while option != 'END':
     if option == '' or option == '1': ### Lookup
+        group = ' '
         try:
             group = input("Enter the password title: ")
             record = passwordsafe[group]
@@ -54,6 +57,7 @@ while option != 'END':
         passwordsafe[group] = deets
         passwordsafefile.write(passwordsafe)
     elif option == "3": ## Edit
+        group = ''
         try:
             group = input("Enter the password name: ")
             pdict = passwordsafe[group]
@@ -66,11 +70,14 @@ while option != 'END':
         for field, value in pdict.items():
             if value != '':
                 print(f"    {field}: {value} ", end='')
+                newval = ''
                 if field == 'Password':
-                    resp = input("Generate new password? ").lower()
-                    if resp != '' and resp[0] == 'y':
+                    resp = input("R)eplace or G)enerate password? ").lower()
+                    if resp != '' and resp[0] == 'g':
                         newval = getnewpassword()
                         print(f"    {newval}")
+                    elif resp != '' and resp[0] == 'r':
+                        newval = input(f"New {field}: ")
                 elif field == 'Group/Title':
                     newval = input(f"New {field}: ")
                     if newval != '':
