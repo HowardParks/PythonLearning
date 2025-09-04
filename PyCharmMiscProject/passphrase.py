@@ -52,8 +52,7 @@ class PassPhrase:
         if resp.endswith('words'):
             composition['raw'] = 'words'
             delim = input("Delimiter to use between words? ")
-            if delim != '':
-                composition['delim'] = delim
+            composition['delim'] = delim
         elif resp.endswith('chars'):
             composition['raw'] = 'chars'
         resp = resp[:-5]
@@ -77,14 +76,12 @@ class PassPhrase:
         random.seed()
         letters = []
         selectlist = []
-        chtypes = []
         # build a list containing the minimums
         for chtype in ['lowercase', 'uppercase', 'digit', 'special']:
             if chtype in composition:
                 slist = list(composition[chtype]['selectfrom'])
                 letters.extend(random.choices(slist, k=composition[chtype]['min']))
                 selectlist.extend(slist)
-                chtypes.append(chtype)
         while len(letters) < composition['length']:
             letters.append(random.choice(selectlist))
         random.shuffle(letters)

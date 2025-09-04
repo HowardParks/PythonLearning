@@ -23,10 +23,14 @@ def titles():
 
 def getnewpassword():
     pp = PassPhrase()
+    comp = pp.get_composition()
     while True:
-        newpassword = pp.passphrase()
-        resp = input(f"Password: {newpassword}  Okay? ").lower()
+        newpassword = pp.passphrase(comp)
+        resp = input(f"Password: {newpassword}  Okay(y/n/e? ").lower()
         if resp[0] == 'y':
+            return newpassword
+        elif resp[0] == 'e':
+            newpassword = input("Enter new password: ")
             return newpassword
 
 passwordsafe =  None
