@@ -45,6 +45,7 @@ class PassPhrase:
         return joiner.join(candidates)
 
     def get_composition(self):
+        ### need to derive this from Password Policy
         composition = {}
         resp = input("What is the total length of the password/phrase and what is it composed of? ")
         if resp == '':
@@ -70,6 +71,10 @@ class PassPhrase:
                     resp = PassPhrase.DEFAULT_CHARSET[chtype]
                 composition[chtype]['selectfrom'] = resp
         return composition
+
+    def get_policy(self, comp: dict) -> str :
+        import json
+        return json.dumps(comp)
 
     def password(self, composition):
         import random

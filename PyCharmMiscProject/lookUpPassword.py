@@ -1,5 +1,5 @@
 import re
-
+from datetime import datetime
 from passphrase import PassPhrase
 from passwordsafefile import PassWordSafeFile
 
@@ -23,13 +23,17 @@ def titles():
 
 def getnewpassword():
     pp = PassPhrase()
+    ### "8umBocphhq$g"
     comp = pp.get_composition()
     while True:
-        newpassword = pp.passphrase(comp)
-        resp = input(f"Password: {newpassword}  Okay(y/n/e? ").lower()
-        if resp[0] == 'y':
+        if comp['raw'] == 'words':
+            newpassword = pp.passphrase(comp)
+        else:
+            newpassword = pp.password(comp)
+        presp = input(f"Password: {newpassword}  Okay(y/n/e)? ").lower()
+        if presp[0] == 'y':
             return newpassword
-        elif resp[0] == 'e':
+        elif presp[0] == 'e':
             newpassword = input("Enter new password: ")
             return newpassword
 
@@ -52,7 +56,13 @@ while option != 'END':
             print(f"Did not find {group}")
             regex_search(keylist, group)
     elif option == '2': ### New
+        ### Add automatic fill in of date fields
         deets = {}
+        now = datetime.now()
+        deets['Created Date'] = now
+        deets['Record Modified Time'] = now
+        deets['Last Access Time'] = now
+        deets['Password Modified Time'] = now
         for t in titles():
             deets[t] = input(f"{t}: ")
             if t == "Password" and deets[t]=='':
@@ -61,7 +71,10 @@ while option != 'END':
         passwordsafe[group] = deets
         passwordsafefile.write(passwordsafe)
     elif option == "3": ## Edit
+        ### Add automatic fill in of date fields, including making the distinction
+        ### between access date and update and pwd change date and pwd change due date
         group = ''
+        now = datetime.now()
         try:
             group = input("Enter the password name: ")
             pdict = passwordsafe[group]
@@ -76,6 +89,7 @@ while option != 'END':
                 print(f"    {field}: {value} ", end='')
                 newval = ''
                 if field == 'Password':
+                    passwordsafe[group]['Password Modified Time'] = now
                     resp = input("R)eplace or G)enerate password? ").lower()
                     if resp != '' and resp[0] == 'g':
                         newval = getnewpassword()
@@ -88,9 +102,12 @@ while option != 'END':
                         groupchange = True
                 else:
                     newval = input(f"New {field}: ")
-                if newval != '':
-                    passwordsafe[group][field] = newval
-                    changemade = True
+            else:
+                newval = input(f"    {field}: ")
+            if newval != '':
+                passwordsafe[group][field] = newval
+                passwordsafe[group]['Record Modified Time'] = now
+                changemade = True
         if changemade:
             passwordsafefile.write(passwordsafe)
     elif option == "4":
