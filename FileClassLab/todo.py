@@ -1,4 +1,18 @@
 import sqlite3
+import logging
+import csv
+from inputhelper import InputHelper
+
+LONGFORMAT = '%(name)s:%(levelname)s:%(asctime)s:%(message)s'
+MESSAGEONLY = '%(message)s'
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+f_handler = logging.FileHandler(filename='Todo.log', mode='a')
+f_handler.setFormatter(logging.Formatter(LONGFORMAT))
+logger.addHandler(f_handler)
+s_handler = logging.StreamHandler()
+s_handler.setFormatter(logging.Formatter(MESSAGEONLY))
+logger.addHandler(s_handler)
 
 
 class Todo:
@@ -14,44 +28,23 @@ class Todo:
                      priority INTEGER NOT NULL
                      );''')
 
-    def return_intresponse(self,field):
-        result = '0'
-        while True:
-            result = input(f'Enter {field}: ')
-            if self.dtype(result) != 'i':
-                print(f"Invalid {field}!")
-            break
-        return result
-
-    def return_strresponse(self,field):
-        result = None
-        while True:
-            result = input(f'Enter {field}: ')
-            if self.dtype(result) != 's':
-                print(f"Invalid {field}!")
-            break
-        return result
-
-    def printrow(self,row):
+    @staticmethod
+    def printrow(row):
         return f"Id: {row[0]}  Task: {row[1]}  Priority: {row[2]}"
 
-    def dtype(self,x):
-        if x is not None and x != '':
-            if x.isdigit():
-                return 'i'
-            if x.replace(' ','').isalnum():
-                return 's'
-        return 'u'
-
     def add_task(self):
-        name = self.return_strresponse('Task')
+        name = InputHelper.return_strresponse('Task')
         look = self.find_task(taskname=name)
         if look is not None:
-            print("Cannot enter duplicate task")
+            logger.warning("Cannot enter duplicate task")
             return None
-        priority = self.return_intresponse('Priority')
-        self.c.execute('INSERT INTO tasks (name, priority) VALUES (?,?)', (name, priority))
+        priority = InputHelper.return_intresponse('Priority')
+        if name is None or priority is None:
+            logger.warning("No valid new task!")
+            return None
+        cmd = self.c.execute('INSERT INTO tasks (name, priority) VALUES (?,?)', (name, priority))
         self.conn.commit()
+        return cmd.lastrowid
 
     def find_task(self, taskname=None,id=None):
         for row in self.task_list():
@@ -72,62 +65,82 @@ class Todo:
             print(self.printrow(row))
 
     def update_priority(self):
-        id = self.return_intresponse('Id')
+        id = InputHelper.return_intresponse('Id')
         row = self.find_task(id=id)
         if row is None:
-            print("Task not found")
-            return
+            logger.warning("Task not found")
+            return None
         print(self.printrow(row))
-        priority = self.return_intresponse('Priority')
-        self.c.execute('UPDATE tasks SET priority = ? WHERE id =  ?',(priority, id))
+        priority = InputHelper.return_intresponse('Priority')
+        if priority is None:
+            logger.warning("Missing priority!")
+            return None
+        cmd = self.c.execute('UPDATE tasks SET priority = ? WHERE id =  ?',(priority, id))
         self.conn.commit()
+        return cmd.rowcount
 
     def delete_task(self):
-        id = self.return_intresponse('Id')
+        id = InputHelper.return_intresponse('Id')
         row = self.find_task(id=id)
         if row is None:
-            print("Task not found")
-            return
+            logger.warning("Task not found")
+            return None
         print(self.printrow(row))
-        self.c.execute('DELETE FROM tasks WHERE id = ?', (id))
+        cmd = self.c.execute('DELETE FROM tasks WHERE id = ?', id)
         self.conn.commit()
+        return cmd.rowcount
 
     def renumber_tasks(self):
         [(maxid,)] = self.c.execute('SELECT MAX(id) FROM tasks')
         tempid = maxid
+        updates = 0
         for row in self.task_list():
             tempid += 1
             self.c.execute('UPDATE tasks SET id = ? WHERE id = ?',(tempid,row[0]))
         for row in self.task_list():
-           self.c.execute('UPDATE tasks SET id = ? WHERE id = ?',(row[0]-maxid,row[0]))
-        return
+            cmd = self.c.execute('UPDATE tasks SET id = ? WHERE id = ?',(row[0]-maxid,row[0]))
+            updates += cmd.rowcount
+        return updates
+
+    def export_csv(self):
+        tasklist = self.task_list()
+        with open('todo.csv','w',newline='') as csvfile:
+            headers = ['id', 'name', 'priority']
+            writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+            writer.writerow(headers)
+            for row in tasklist:
+                writer.writerow(row)
+        return len(tasklist)
 
     def close(self):
         self.conn.commit()
         self.conn.close()
 
+if __name__ == "__main__":
+    app = Todo()
+    while True:
+        print('''Application Menu:
+        1. Show Tasks
+        2. Add Task
+        3. Update priority
+        4. Delete task
+        5. Renumber tasks by priority
+        6. Export
+        7. Exit''')
+        choice = InputHelper.return_intresponse('Choice')
+        if choice == '1':
+            app.list_tasks()
+        elif choice == '2':
+            app.add_task()
+        elif choice == '3':
+            app.update_priority()
+        elif choice == '4':
+            app.delete_task()
+        elif choice == '5':
+            app.renumber_tasks()
+        elif choice == '6':
+            app.export_csv()
+        elif choice == '7':
+            break
 
-app = Todo()
-while True:
-    print('''Application Menu:
-    1. Show Tasks
-    2. Add Task
-    3. Update priority
-    4. Delete task
-    5. Renumber tasks by priority
-    6. Exit''')
-    choice =  app.return_intresponse('Choice')
-    if choice == '1':
-        app.list_tasks()
-    elif choice == '2':
-        app.add_task()
-    elif choice == '3':
-        app.update_priority()
-    elif choice == '4':
-        app.delete_task()
-    elif choice == '5':
-        app.renumber_tasks()
-    elif choice == '6':
-        break
-
-app.close()
+    app.close()
